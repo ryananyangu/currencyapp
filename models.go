@@ -7,4 +7,5 @@ type Currency struct {
 	Country     string
 	Name        string
 	LastFetchAt time.Time
+	Code        string
 }
