@@ -74,38 +74,34 @@ func main() {
 
 Loop:
 	for {
-		for {
-			currencyCode := strings.TrimSpace(requestInput("Enter a command or currency code(s)"))
-			inputs := strings.Split(currencyCode, ",")
-			switch inputs[0] {
-			case "exit":
-				println("bye...")
-				break Loop
-			case "reload":
-				reloadResponse, _err := getDataFromURL(currenciesURL)
-				if _err != nil {
-					println("An error occured while reloading currencies.")
-					println("Try again or exit the application, previous currencies can still be used")
-					continue Loop
-				}
-				fmt.Printf("Reload successful at %s :", time.Now())
-				response = reloadResponse
-				currencies = bindResponseToCurrency(response)
-				continue Loop
-			case "help":
-				println("Cheap Stocks, Inc currency checker")
-				println("Special Commands:")
-				println("exit to exit the application")
-				println("reload to reload data from  the application")
-				println("Usage of search : input Single code for single search and \n comma separated input for multisearch i.e. JPY,BGP,USD")
-
-			case "":
-				println("Cannot process empty input")
-			default:
-				displayResponses(inputs, currencies)
+		currencyCode := strings.TrimSpace(requestInput("Enter a command or currency code(s)"))
+		inputs := strings.Split(currencyCode, ",")
+		switch inputs[0] {
+		case "exit":
+			println("bye...")
+			break Loop
+		case "reload":
+			reloadResponse, _err := getDataFromURL(currenciesURL)
+			if _err != nil {
+				println("An error occured while reloading currencies.")
+				println("Try again or exit the application, previous currencies can still be used")
 			}
+			fmt.Printf("Reload successful at %s :", time.Now())
+			response = reloadResponse
+			currencies = bindResponseToCurrency(response)
+		case "help":
+			println("Cheap Stocks, Inc currency checker")
+			println("Special Commands:")
+			println("exit to exit the application")
+			println("reload to reload data from  the application")
+			println("Usage of search : input Single code for single search and \n comma separated input for multisearch i.e. JPY,BGP,USD")
 
+		case "":
+			println("Cannot process empty input")
+		default:
+			displayResponses(inputs, currencies)
 		}
+
 	}
 
 }
