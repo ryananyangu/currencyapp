@@ -65,6 +65,7 @@ func main() {
 	println("Special Commands:")
 	println("exit to exit the application")
 	println("reload to reload data from  the application")
+	println("help to get extra information about the commands")
 	response, err := getDataFromURL(currenciesURL)
 	if err != nil {
 		log.Fatal("Unable to load currencies from remote server")
@@ -91,6 +92,13 @@ Loop:
 				response = reloadResponse
 				currencies = bindResponseToCurrency(response)
 				continue Loop
+			case "help":
+				println("Cheap Stocks, Inc currency checker")
+				println("Special Commands:")
+				println("exit to exit the application")
+				println("reload to reload data from  the application")
+				println("Usage of search : input Single code for single search and \n comma separated input for multisearch i.e. JPY,BGP,USD")
+
 			case "":
 				println("Cannot process empty input")
 			default:

@@ -12,3 +12,4 @@
 *.out
 adhoctests_main.go
 *_test.go
+bin

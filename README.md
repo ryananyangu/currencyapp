@@ -22,7 +22,8 @@
 ## Application commands 
 1. reload -> Application to fetch and update the list of currency codes while already running
 2. exit -> application exiting gracefully 
-3. Application accepts multi input currency code search as long the codes are comma separated
+3. help -> displays instructions for using the application
+4. Application accepts multi input currency code search as long the codes are comma separated
 
 
 ## Running application
