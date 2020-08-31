@@ -9,9 +9,11 @@ import (
 	"time"
 )
 
-var currenciesURL = "https://focusmobile-interview-materials.s3.eu-west-3.amazonaws.com/Cheap.Stocks.Internationalization.Currencies.csv"
+var currenciesSet string
 
-func getDataFromURL(url string) ([]string, error) {
+var languagesSet string
+
+func getDataFromURL(url string) (string, error) {
 	// Make a http request to ge the currencies
 	client := &http.Client{}
 
@@ -19,13 +21,15 @@ func getDataFromURL(url string) ([]string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		// Return an empty list and the error if we've got any
-		return nil, err
+		return "", err
 	}
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	// Convert the body to a string and split by new line
-	csvLines := strings.Split(string(respBody), "\r\n")
+	return string(respBody), nil
+}
 
-	return csvLines, nil
+func csvLinesFromString(csvfile string) []string {
+	// Convert the body to a string and split by new line
+	return strings.Split(csvfile, "\r\n")
 }
 
 func bindResponseToCurrency(response []string) map[string]Currency {
@@ -60,42 +64,78 @@ func displayResponses(inputs []string, currencies map[string]Currency) {
 
 }
 
+func list(input string) {
+	switch input {
+	case "currencies":
+		// TODO: Function to list currencies
+	case "languages":
+		// TODO: Add function to list langages
+	default:
+		//TODO: Invalid selection
+
+	}
+}
+
+func set(inputs []string) {
+
+}
+
+func convert(inputs []string) {
+
+}
+
+func remove(s []string, i int) []string {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 func main() {
 	println("Cheap Stocks, Inc currency checker")
 	println("Special Commands:")
 	println("exit to exit the application")
 	println("reload to reload data from  the application")
 	println("help to get extra information about the commands")
-	response, err := getDataFromURL(currenciesURL)
+	response, err := getDataFromURL(CurrenciesURL)
 	if err != nil {
 		log.Fatal("Unable to load currencies from remote server")
 	}
-	currencies := bindResponseToCurrency(response)
+	processedCsv := csvLinesFromString(response)
+	currencies := bindResponseToCurrency(processedCsv)
+	// defaultCurrency := "USD"
+	// defaultLanguage := "en"
 
 Loop:
 	for {
 		currencyCode := strings.TrimSpace(requestInput("Enter a command or currency code(s)"))
-		inputs := strings.Split(currencyCode, ",")
+		inputs := strings.Split(currencyCode, " ")
 		switch inputs[0] {
 		case "exit":
 			println("bye...")
 			break Loop
 		case "reload":
-			reloadResponse, _err := getDataFromURL(currenciesURL)
+			reloadResponse, _err := getDataFromURL(CurrenciesURL)
 			if _err != nil {
 				println("An error occured while reloading currencies.")
 				println("Try again or exit the application, previous currencies can still be used")
 			}
 			fmt.Printf("Reload successful at %s :", time.Now())
 			response = reloadResponse
-			currencies = bindResponseToCurrency(response)
+			processedCsv := csvLinesFromString(response)
+			currencies = bindResponseToCurrency(processedCsv)
 		case "help":
 			println("Cheap Stocks, Inc currency checker")
 			println("Special Commands:")
 			println("exit to exit the application")
 			println("reload to reload data from  the application")
-			println("Usage of search : input Single code for single search and \n comma separated input for multisearch i.e. JPY,BGP,USD")
-
+			println("Usage of search : input Single code for single search and \n space separated input for multisearch i.e. JPY BGP USD")
+		case "list":
+			list(inputs[1])
+		case "set":
+			commandData := remove(inputs, 0)
+			set(commandData)
+		case "convert":
+			commandData := remove(inputs, 0)
+			convert(commandData)
 		case "":
 			println("Cannot process empty input")
 		default:

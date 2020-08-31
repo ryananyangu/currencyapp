@@ -9,3 +9,10 @@ type Currency struct {
 	LastFetchAt time.Time
 	Code        string
 }
+
+// Language model for storing available retieved languages
+type Language struct {
+	Name        string
+	Code        string
+	LastFetchAt time.Time
+}
