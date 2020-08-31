@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -25,6 +26,7 @@ func getDataFromURL(url string) (string, error) {
 		// Return an empty list and the error if we've got any
 		return "", err
 	}
+	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
 	return string(respBody), nil
 }
@@ -53,7 +55,7 @@ func bindResponseToCurrency(response []string) map[string]Currency {
 
 }
 
-func biindResponseToLanguage(response []string) map[string]Language {
+func bindResponseToLanguage(response []string) map[string]Language {
 	languages := make(map[string]Language)
 	for i, line := range response {
 		if i == 0 {
@@ -116,8 +118,47 @@ func languageCheck(key string) {
 		fmt.Println("****************************************************************")
 	}
 }
+func convert(inputs []string) error {
+	urlOptionOne := fixerConvertURLBuilder(inputs)
+	data, err := getDataFromURL(urlOptionOne)
 
-func convert(inputs []string) {
+	if err != nil {
+		fmt.Println("Failed to retrive desired information network Retrying different source..")
+		// err = optionTwoRequest(inputs)
+		urlOptionTwo := currencyConvertURLBuilder(inputs)
+		data, err = getDataFromURL(urlOptionTwo)
+		if err != nil {
+			return errors.New("Failed to retieved information from all available source")
+		}
+	}
+	result, err := DecodingResponse(data)
+	if err != nil {
+		return errors.New("Response procesing of request failed")
+	}
+	if _, ok := result["success"]; !ok {
+		return errors.New("Response procesing of request failed with no status")
+	}
+	status := result["success"].(bool)
+	if !status {
+		return errors.New("Response procesing of request failed with status false")
+	}
+
+	if value, ok := result["rates"]; ok {
+		items := value.(map[string]float64)
+		for key, value := range items {
+			fmt.Println("The current price for %s is %f\n", key, value)
+		}
+
+	} else if value, ok := result["quotes"]; ok {
+		items := value.(map[string]float64)
+		for key, value := range items {
+			fmt.Println("The current price for %s is %f\n", key, value)
+		}
+
+	} else {
+		return errors.New("Response procesing of request failed application error")
+	}
+	return nil
 
 }
 
@@ -142,7 +183,7 @@ func loadCurrencies() {
 		println("An error occured while reloading currencies.")
 		println("Try again or exit the application, if application had started previous currencies can be still used")
 	}
-	fmt.Printf("Reload successful at %s\n :", time.Now())
+	fmt.Printf("Currencies loaded successfully at %s : \n", time.Now())
 	processedCsv := csvLinesFromString(reloadResponse)
 	currencies = bindResponseToCurrency(processedCsv)
 }
@@ -153,9 +194,9 @@ func loadLanguages() {
 		println("An error occured while reloading languages.")
 		println("Try again or exit the application, if application had already started previous loaded languages can be used.")
 	}
-	fmt.Printf("Reload successful at %s\n :", time.Now())
+	fmt.Printf("Languages loaded successfully at %s : \n", time.Now())
 	processedCsv := csvLinesFromString(reloadResponse)
-	languages = biindResponseToLanguage(processedCsv)
+	languages = bindResponseToLanguage(processedCsv)
 }
 
 func list(input string) {
@@ -198,6 +239,14 @@ func reload(flag string) {
 
 }
 
+func currencyConvertURLBuilder(currencyCodes []string) string {
+	return CurrencyLayerBaseURL + "live?access_key=" + CurrencyLayerAccessKey + "&source=" + defaultCurrency + "&currencies=" + strings.Join(currencyCodes, ",")
+}
+
+func fixerConvertURLBuilder(currencyCodes []string) string {
+	return FixerBaseURL + "latest?access_key=" + FixerAccessKey + "&base=" + defaultCurrency + "&symbols=" + strings.Join(currencyCodes, ",")
+}
+
 func main() {
 	println("Cheap Stocks, Inc currency checker")
 	println("Special Commands:")
@@ -228,6 +277,7 @@ Loop:
 			commandData := remove(inputs, 0)
 			convert(commandData)
 		case "":
+
 			println("Cannot process empty input")
 		default:
 			displayResponses(inputs, currencies)
@@ -236,3 +286,7 @@ Loop:
 	}
 
 }
+
+// {"success":true,"timestamp":1598894045,"base":"EUR","date":"2020-08-31","rates":{"USD":1.194608,"GBP":0.893071}}
+
+// {"success":true,"terms":"https:\/\/currencylayer.com\/terms","privacy":"https:\/\/currencylayer.com\/privacy","timestamp":1598891885,"source":"USD","quotes":{"USDGBP":0.747425}}
