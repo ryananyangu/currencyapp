@@ -71,6 +71,18 @@ func biindResponseToLanguage(response []string) map[string]Language {
 	return languages
 }
 
+func displayLanguages() {
+	for code, language := range languages {
+		fmt.Printf("List of available languages\nLoaded at:\t %v \nCode:\t %s \nName:\t %s \n", language.LastFetchAt, code, language.Name)
+	}
+}
+
+func displayCurrencies() {
+	for code, currency := range currencies {
+		fmt.Printf("Query OK\nLoaded at:\t %v \nCurrency Code:\t %s \nCountry:\t %s\nCurrency:\t %s\n", currency.LastFetchAt, code, currency.Country, currency.Name)
+	}
+}
+
 func displayResponses(inputs []string, currencies map[string]Currency) {
 	for _, input := range inputs {
 		if currency, ok := currencies[input]; ok {
@@ -87,11 +99,12 @@ func displayResponses(inputs []string, currencies map[string]Currency) {
 func list(input string) {
 	switch input {
 	case "currencies":
-		// TODO: Function to list currencies
+		displayCurrencies()
 	case "languages":
-		// TODO: Add function to list langages
+		displayLanguages()
 	default:
-		//TODO: Invalid selection
+		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", input)
+		fmt.Println("****************************************************************")
 
 	}
 }
