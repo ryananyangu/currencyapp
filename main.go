@@ -13,8 +13,8 @@ var currencies map[string]Currency
 
 var languages map[string]Language
 
-// defaultCurrency := "USD"
-// defaultLanguage := "en"
+var defaultCurrency string = "USD"
+var defaultLanguage string = "en"
 
 func getDataFromURL(url string) (string, error) {
 	// Make a http request to ge the currencies
@@ -103,14 +103,45 @@ func list(input string) {
 	case "languages":
 		displayLanguages()
 	default:
-		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", input)
+		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", input)
 		fmt.Println("****************************************************************")
+	}
+}
+func currencyCheck(key string) {
+	if _, ok := currencies[key]; ok {
+		defaultCurrency = key
+		fmt.Printf("Default value for currency set to :  %s\n", key)
+		fmt.Println("****************************************************************")
+	} else {
+		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", key)
+		fmt.Println("****************************************************************")
+	}
+}
 
+func languageCheck(key string) {
+	if _, ok := languages[key]; ok {
+		defaultLanguage = key
+		fmt.Printf("Default value for currency set to :  %s\n", key)
+		fmt.Println("****************************************************************")
+	} else {
+		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", key)
+		fmt.Println("****************************************************************")
 	}
 }
 
 func set(inputs []string) {
-
+	for _, setcombo := range inputs {
+		setkv := strings.Split(setcombo, "=")
+		switch setkv[0] {
+		case "currency":
+			currencyCheck(setkv[1])
+		case "language":
+			languageCheck(setkv[1])
+		default:
+			fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", setkv[0])
+			fmt.Println("****************************************************************")
+		}
+	}
 }
 
 func convert(inputs []string) {
@@ -120,6 +151,16 @@ func convert(inputs []string) {
 func remove(s []string, i int) []string {
 	s[len(s)-1], s[i] = s[i], s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func help() {
+	println("Cheap Stocks, Inc currency checker")
+	println("Special Commands:")
+	println("exit to exit the application")
+	println("reload {flag} to reload data from  the application based on input flag\n available flags are currencies and languages\n i.e. \"reload currencies\" or \"reload languages\" ")
+	println("list {flag} to list data from  the application based on input flag\n available flags are currencies and languages\n i.e. \"list currencies\" or \"list languages\" ")
+	println("set {flag}=<value> ... used to setup default values for one or more functions.\n Available flags are currency and language\n i.e \"set currency=USD language=en\" ")
+	println("Usage of search : input Single currency code for single search and \n space separated input for currency code multisearch i.e. JPY BGP USD")
 }
 
 func main() {
@@ -158,11 +199,7 @@ Loop:
 			processedCsv := csvLinesFromString(currencyResponse)
 			currencies = bindResponseToCurrency(processedCsv)
 		case "help":
-			println("Cheap Stocks, Inc currency checker")
-			println("Special Commands:")
-			println("exit to exit the application")
-			println("reload to reload data from  the application")
-			println("Usage of search : input Single code for single search and \n space separated input for multisearch i.e. JPY BGP USD")
+			help()
 		case "list":
 			list(inputs[1])
 		case "set":
