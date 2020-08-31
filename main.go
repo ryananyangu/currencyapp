@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -73,7 +72,7 @@ func biindResponseToLanguage(response []string) map[string]Language {
 
 func displayLanguages() {
 	for code, language := range languages {
-		fmt.Printf("List of available languages\nLoaded at:\t %v \nCode:\t %s \nName:\t %s \n", language.LastFetchAt, code, language.Name)
+		fmt.Printf("Language\nLoaded at:\t %v \nCode:\t %s \nName:\t %s \n", language.LastFetchAt, code, language.Name)
 	}
 }
 
@@ -96,24 +95,13 @@ func displayResponses(inputs []string, currencies map[string]Currency) {
 
 }
 
-func list(input string) {
-	switch input {
-	case "currencies":
-		displayCurrencies()
-	case "languages":
-		displayLanguages()
-	default:
-		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", input)
-		fmt.Println("****************************************************************")
-	}
-}
 func currencyCheck(key string) {
 	if _, ok := currencies[key]; ok {
 		defaultCurrency = key
 		fmt.Printf("Default value for currency set to :  %s\n", key)
 		fmt.Println("****************************************************************")
 	} else {
-		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", key)
+		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", key)
 		fmt.Println("****************************************************************")
 	}
 }
@@ -121,26 +109,11 @@ func currencyCheck(key string) {
 func languageCheck(key string) {
 	if _, ok := languages[key]; ok {
 		defaultLanguage = key
-		fmt.Printf("Default value for currency set to :  %s\n", key)
+		fmt.Printf("Default value for language set to :  %s\n", key)
 		fmt.Println("****************************************************************")
 	} else {
-		fmt.Printf("Invalid comman flag %s\nCommand  is not supported\n", key)
+		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", key)
 		fmt.Println("****************************************************************")
-	}
-}
-
-func set(inputs []string) {
-	for _, setcombo := range inputs {
-		setkv := strings.Split(setcombo, "=")
-		switch setkv[0] {
-		case "currency":
-			currencyCheck(setkv[1])
-		case "language":
-			languageCheck(setkv[1])
-		default:
-			fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", setkv[0])
-			fmt.Println("****************************************************************")
-		}
 	}
 }
 
@@ -163,34 +136,61 @@ func help() {
 	println("Usage of search : input Single currency code for single search and \n space separated input for currency code multisearch i.e. JPY BGP USD")
 }
 
-func reloadCurrencies() {
+func loadCurrencies() {
 	reloadResponse, _err := getDataFromURL(CurrenciesURL)
 	if _err != nil {
 		println("An error occured while reloading currencies.")
-		println("Try again or exit the application, previous currencies can still be used")
+		println("Try again or exit the application, if application had started previous currencies can be still used")
 	}
 	fmt.Printf("Reload successful at %s\n :", time.Now())
 	processedCsv := csvLinesFromString(reloadResponse)
 	currencies = bindResponseToCurrency(processedCsv)
 }
 
-func reloadLanguages() {
+func loadLanguages() {
 	reloadResponse, _err := getDataFromURL(LanguagesURL)
 	if _err != nil {
-		println("An error occured while reloading currencies.")
-		println("Try again or exit the application, previous currencies can still be used")
+		println("An error occured while reloading languages.")
+		println("Try again or exit the application, if application had already started previous loaded languages can be used.")
 	}
 	fmt.Printf("Reload successful at %s\n :", time.Now())
 	processedCsv := csvLinesFromString(reloadResponse)
 	languages = biindResponseToLanguage(processedCsv)
 }
 
+func list(input string) {
+	switch input {
+	case "currencies":
+		displayCurrencies()
+	case "languages":
+		displayLanguages()
+	default:
+		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", input)
+		fmt.Println("****************************************************************")
+	}
+}
+
+func set(inputs []string) {
+	for _, setcombo := range inputs {
+		setkv := strings.Split(setcombo, "=")
+		switch setkv[0] {
+		case "currency":
+			currencyCheck(setkv[1])
+		case "language":
+			languageCheck(setkv[1])
+		default:
+			fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", setkv[0])
+			fmt.Println("****************************************************************")
+		}
+	}
+}
+
 func reload(flag string) {
 	switch flag {
 	case "currencies":
-		reloadCurrencies()
+		loadCurrencies()
 	case "languages":
-		reloadLanguages()
+		loadLanguages()
 	default:
 		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", flag)
 		fmt.Println("****************************************************************")
@@ -204,16 +204,8 @@ func main() {
 	println("exit to exit the application")
 	println("reload to reload data from  the application")
 	println("help to get extra information about the commands")
-	currencyResponse, err := getDataFromURL(CurrenciesURL)
-	langResponse, err := getDataFromURL(LanguagesURL)
-	if err != nil {
-		log.Fatal("Unable to load currencies from remote server")
-	}
-	processedCsvCurrency := csvLinesFromString(currencyResponse)
-	currencies = bindResponseToCurrency(processedCsvCurrency)
-
-	processedCsvLang := csvLinesFromString(langResponse)
-	languages = biindResponseToLanguage(processedCsvLang)
+	loadCurrencies()
+	loadLanguages()
 
 Loop:
 	for {
