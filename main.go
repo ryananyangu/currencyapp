@@ -163,6 +163,41 @@ func help() {
 	println("Usage of search : input Single currency code for single search and \n space separated input for currency code multisearch i.e. JPY BGP USD")
 }
 
+func reloadCurrencies() {
+	reloadResponse, _err := getDataFromURL(CurrenciesURL)
+	if _err != nil {
+		println("An error occured while reloading currencies.")
+		println("Try again or exit the application, previous currencies can still be used")
+	}
+	fmt.Printf("Reload successful at %s\n :", time.Now())
+	processedCsv := csvLinesFromString(reloadResponse)
+	currencies = bindResponseToCurrency(processedCsv)
+}
+
+func reloadLanguages() {
+	reloadResponse, _err := getDataFromURL(LanguagesURL)
+	if _err != nil {
+		println("An error occured while reloading currencies.")
+		println("Try again or exit the application, previous currencies can still be used")
+	}
+	fmt.Printf("Reload successful at %s\n :", time.Now())
+	processedCsv := csvLinesFromString(reloadResponse)
+	languages = biindResponseToLanguage(processedCsv)
+}
+
+func reload(flag string) {
+	switch flag {
+	case "currencies":
+		reloadCurrencies()
+	case "languages":
+		reloadLanguages()
+	default:
+		fmt.Printf("Invalid command flag %s\nCommand  is not supported\n", flag)
+		fmt.Println("****************************************************************")
+	}
+
+}
+
 func main() {
 	println("Cheap Stocks, Inc currency checker")
 	println("Special Commands:")
@@ -189,15 +224,7 @@ Loop:
 			println("bye...")
 			break Loop
 		case "reload":
-			reloadResponse, _err := getDataFromURL(CurrenciesURL)
-			if _err != nil {
-				println("An error occured while reloading currencies.")
-				println("Try again or exit the application, previous currencies can still be used")
-			}
-			fmt.Printf("Reload successful at %s :", time.Now())
-			currencyResponse = reloadResponse
-			processedCsv := csvLinesFromString(currencyResponse)
-			currencies = bindResponseToCurrency(processedCsv)
+			reload(inputs[1])
 		case "help":
 			help()
 		case "list":
