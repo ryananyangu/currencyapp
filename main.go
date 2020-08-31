@@ -9,9 +9,12 @@ import (
 	"time"
 )
 
-var currenciesSet string
+var currencies map[string]Currency
 
-var languagesSet string
+var languages map[string]Language
+
+// defaultCurrency := "USD"
+// defaultLanguage := "en"
 
 func getDataFromURL(url string) (string, error) {
 	// Make a http request to ge the currencies
@@ -49,6 +52,23 @@ func bindResponseToCurrency(response []string) map[string]Currency {
 	}
 	return currencies
 
+}
+
+func biindResponseToLanguage(response []string) map[string]Language {
+	languages := make(map[string]Language)
+	for i, line := range response {
+		if i == 0 {
+			continue
+		}
+		rowData := strings.Split(line, ",")
+		code := rowData[1]
+		languages[code] = Language{
+			Name:        rowData[0],
+			Code:        rowData[1],
+			LastFetchAt: time.Now(),
+		}
+	}
+	return languages
 }
 
 func displayResponses(inputs []string, currencies map[string]Currency) {
@@ -95,14 +115,16 @@ func main() {
 	println("exit to exit the application")
 	println("reload to reload data from  the application")
 	println("help to get extra information about the commands")
-	response, err := getDataFromURL(CurrenciesURL)
+	currencyResponse, err := getDataFromURL(CurrenciesURL)
+	langResponse, err := getDataFromURL(LanguagesURL)
 	if err != nil {
 		log.Fatal("Unable to load currencies from remote server")
 	}
-	processedCsv := csvLinesFromString(response)
-	currencies := bindResponseToCurrency(processedCsv)
-	// defaultCurrency := "USD"
-	// defaultLanguage := "en"
+	processedCsvCurrency := csvLinesFromString(currencyResponse)
+	currencies = bindResponseToCurrency(processedCsvCurrency)
+
+	processedCsvLang := csvLinesFromString(langResponse)
+	languages = biindResponseToLanguage(processedCsvLang)
 
 Loop:
 	for {
@@ -119,8 +141,8 @@ Loop:
 				println("Try again or exit the application, previous currencies can still be used")
 			}
 			fmt.Printf("Reload successful at %s :", time.Now())
-			response = reloadResponse
-			processedCsv := csvLinesFromString(response)
+			currencyResponse = reloadResponse
+			processedCsv := csvLinesFromString(currencyResponse)
 			currencies = bindResponseToCurrency(processedCsv)
 		case "help":
 			println("Cheap Stocks, Inc currency checker")
